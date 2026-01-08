@@ -15,15 +15,20 @@ class Sensor:
         self.battery_level = battery_level
 
         
-        # Check if the value is within range and include the value in the returned string. 
+        # Validates the sampled value against the sensor's defined range
+        # Returns a descriptive status string
         
     def validate_value(self, value: float) -> str:
+        # Ensure the data is numeric to prevent comparison errors
         if not isinstance(value, (int, float)):
             return "ERROR: Invalid numeric data"
+        # Check against minimum threshold
         if value < self.min_val:
             return f"Too Low, the temperature is: {value}C"
+        # Check against maximum threshold
         elif value > self.max_val:
             return f"Too High, the temperature is: {value}C"
+        # Value is within the safe operating range
         else:
             return f"Valid, the temperature is: {value}C"
              
