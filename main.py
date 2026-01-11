@@ -5,7 +5,7 @@ from sensors import Sensor
 from event_manager import EventManager
 
 def main():
-    # Remove old JSON sensor files to ensure a clean state for the nem simulation run
+    # Remove old JSON sensor files to ensure a clean state for the new simulation run
     for f in glob.glob("sensor_*.json"):
         try:
             os.remove(f)
@@ -23,17 +23,32 @@ def main():
         Sensor("Temperature", 5, "Child Room", 19.0, 26.0, 100),
     ]
     # Ensure the user provided the required 'total_seconds' argument via Command Line
-    if len(sys.argv) < 2:
-        print("Usage: python3 main.py <total_seconds>")
-        return
-
+    num_args =len(sys.argv)
+    
     try:
-        # Convert input to unteger and validate that its a positive number
-        total_seconds = int(sys.argv[1])
-        if total_seconds <= 0:
-            raise ValueError("Please provide a positive number of seconds.")
+
+        if num_args == 2:
+           total_seconds = float(sys.argv[1])
+           interval = 5.0
+        elif num_args == 3:
+           total_seconds = float(sys.argv[1])
+           interval = float(sys.argv[2])
+        else:
+            print("\n[!] Error: Invalid input")
+            print("please follow this format:")
+            print("python3 main.py <total_seconds> <interval_seconds>")
+            print("\nExample:")
+            print("python3 main.py 10 0.5")
+            return
+        # validate that input are positive and interval fits within total time 
+
+        if total_seconds <= 0 or interval <= 0:
+            raise ValueError("All numbers must be positive")
+        
+        if interval > total_seconds:
+            raise ValueError(f"Interval ({interval}s) cannot be larger than total time ({total_seconds}s)")
         # Start the sampling process and capture events from all sensors
-        all_captured_events = manager.run_simulation(sensors, total_seconds)
+        all_captured_events = manager.run_simulation(sensors, total_seconds, interval)
 
                                              
         # Only proceed to export if data was actually collected

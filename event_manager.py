@@ -75,45 +75,44 @@ class EventManager:
         return event
     
 
-    def run_simulation(self, sensors_list: list, total_seconds: int):
+    def run_simulation(self, sensors_list: list, total_seconds: float, interval: float = 5):
         # Configuration: sensors take a sample every 5 seconds 
-        interval = 5
-        time_passed = 0
+        time_passed = 0.0
         all_captured_events = []
 
         print(f"Starting simulation for {total_seconds} seconds. Sample every {interval} seconds.")
         
         # Main simulation loop: iterate as long as we haven't exceeded the total duration
         while time_passed <= total_seconds:
-                print(F"Sampling at second: {time_passed}")
+            print(f"Sampling at second: {round(time_passed, 2)}")
         
-                # Generate an event for each sensor provided in the sensors_list
-                for sensor in sensors_list:
-                    event = self.create_event(sensor)
-                    # If the sensor is active (not dead/None), store the event
-                    if event:
-                      all_captured_events.append(event)
+            # Generate an event for each sensor provided in the sensors_list
+            for sensor in sensors_list:
+                event = self.create_event(sensor)
+                # If the sensor is active (not dead/None), store the event
+                if event:           
+                    all_captured_events.append(event)
 
-                # Determine the wait time until the next sampling point
-                if time_passed + interval <= total_seconds: 
-                    # Normal interval wait       
-                    time.sleep(interval)
-                    time_passed += interval
+            # Determine the wait time until the next sampling point
+            if round(time_passed + interval, 10) <= round(total_seconds, 10): 
+            # Normal interval wait       
+                time.sleep(interval)
+                time_passed += interval
 
                 
-                elif time_passed < total_seconds:
-                    # Final wait: handle the remaining seconds to reach the exact total_seconds
-                    remainder = total_seconds - time_passed
-                    print(f"Waiting for the remainder of {remainder} seconds...")
-                    time.sleep(remainder)
-                    time_passed += remainder
+            elif time_passed < total_seconds:
+                # Final wait: handle the remaining seconds to reach the exact total_seconds
+                remainder = total_seconds - time_passed
+                print(f"Waiting for the remainder of {remainder:.2f} seconds...")
+                time.sleep(remainder)
+                time_passed += remainder
                
-                else:
-                    # Stop if we have reached the exact total time
-                    break
+            else:
+                # Stop if we have reached the exact total time
+                break
                               
            
-        print(f"\nSimulation complete. Total time: {time_passed} seconds. Processed {len(all_captured_events)} events.")
+        print(f"\nSimulation complete. Total time: {time_passed:.2f} seconds. Processed {len(all_captured_events)} events.")
         return all_captured_events        
     
 
@@ -125,15 +124,19 @@ class EventManager:
         # If there is no data, dont do anything  
         if not events:
             return
+        grouped_events = {}
+        for e in events:
+            s_id = e['sensor_id']
+            if s_id not in grouped_events:
+                grouped_events[s_id] = []
+            grouped_events[s_id].append(e)
         
-        sensor_ids = set(e['sensor_id'] for e in events)
-        for s_id in sensor_ids:
-            sensor_events = [e for e in events if e['sensor_id'] == s_id]
+        for s_id, sensor_events in grouped_events.items():
             filename = f"sensor_{s_id:02d}.json"
 
             with open(filename, 'w') as f:
                 json.dump(sensor_events, f, indent=4)
-        print(f"Successfully saved {len(sensor_ids)} files.")    
+        print(f"Successfully saved {len(grouped_events)} files.")    
 
 
 
@@ -149,7 +152,7 @@ class EventManager:
         
         # Open the file and set up the CSV writer
             with open(filename, 'w', newline='', encoding='utf-8') as f:
-                dict_writer = csv.DictWriter(f, fieldnames=keys)
+                dict_writer = csv.DictWriter(f, fieldnames=keys, extrasaction='ignore')
                 dict_writer.writeheader() # Write the top header row
                 dict_writer.writerows(events) # Write all the data rows
             
