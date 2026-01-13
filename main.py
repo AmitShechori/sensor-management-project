@@ -5,10 +5,14 @@ from sensors import Sensor
 from event_manager import EventManager
 
 def main():
-    # Remove old JSON sensor files to ensure a clean state for the new simulation run
-    for f in glob.glob("sensor_*.json"):
+    # Define the files we want to clear before starting a new run
+    # This includes individual sensor JSONs and the aggregate CSV file
+    files_to_remove = glob.glob("sensor_*.json") + ["sensor_data.csv"]
+
+    for f in files_to_remove:
         try:
-            os.remove(f)
+           if os.path.exists(f):
+               os.remove(f)
         except OSError :
             pass # Ignore errors if file is already gone or inaccessible
 
@@ -30,6 +34,7 @@ def main():
         if num_args == 2:
            total_seconds = float(sys.argv[1])
            interval = 5.0
+           print(f"No interval provided. Using default interval: {interval}s")
         elif num_args == 3:
            total_seconds = float(sys.argv[1])
            interval = float(sys.argv[2])
@@ -53,7 +58,7 @@ def main():
                                              
         # Only proceed to export if data was actually collected
         if all_captured_events:
-            manager.export_each_sensor_to_json(all_captured_events)
+            manager.export_each_sensor_to_json()
             manager.export_to_csv(all_captured_events)
         else:
             print("No events were captured, skipping files export.")

@@ -54,12 +54,12 @@ def analyzer():
                     print(f"  - Average temperature: N/A (No valid data)")
                 print("-" * 40)
 
-    # Find the maximun value 
+    # Find the maximum value 
     if all_valid_events:
           hottest_event = max(all_valid_events, key=lambda x: x["value"])  
 
           print("\n" + "="*40)
-          print(f" GOLBAL HOTTEST POINT DETECTED")         
+          print(f" GLOBAL HOTTEST POINT DETECTED")         
           print(f"Hottest event in: {hottest_event['location']}")
           print(f"Temperature: {hottest_event['value']}C")  
           print(f"Timestamp: {hottest_event['timestamp']}")    

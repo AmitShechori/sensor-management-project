@@ -28,11 +28,11 @@ class EventManager:
 
         # Roll for a random chance to trigger sensor anomalies/errors
         chance = random.random()
-        # 5% chance: Simulate a hardware glitch returnung extreme low values
+        # 5% chance: Simulate a hardware glitch returning extreme low values
         if chance < 0.05:
             sampled_value = round(random.uniform(-50, -200), 2)
             logging.warning(f"Sensor {sensor.sensor_id} ({sensor.location}): Hardware error - Extreme low value detected: {sampled_value}.")
-        # 5% chance: Simulate a hardware glitch returnung extreme high values 
+        # 5% chance: Simulate a hardware glitch returning extreme high values 
         elif chance < 0.1:
             sampled_value = round(random.uniform(50, 200), 2)
             logging.warning(f"Sensor {sensor.sensor_id} ({sensor.location}): Hardware error - Extreme high value detected: {sampled_value}.")
@@ -79,11 +79,11 @@ class EventManager:
         # Configuration: sensors take a sample every 5 seconds 
         time_passed = 0.0
         all_captured_events = []
-
+        self.grouped_data = {}
         print(f"Starting simulation for {total_seconds} seconds. Sample every {interval} seconds.")
         
         # Main simulation loop: iterate as long as we haven't exceeded the total duration
-        while time_passed <= total_seconds:
+        while True:
             print(f"Sampling at second: {round(time_passed, 2)}")
         
             # Generate an event for each sensor provided in the sensors_list
@@ -93,6 +93,16 @@ class EventManager:
                 if event:           
                     all_captured_events.append(event)
 
+                    # Efficiency Optimization: Group events by sensor ID during the simulation
+                    # This avoids an expensive O(N) grouping/sorting step after the simulation
+                    s_id = sensor.sensor_id
+                    if s_id not in self.grouped_data:
+                        self.grouped_data[s_id] = []
+                    self.grouped_data[s_id].append(event)
+
+            # Stop if we have reached the exact total time
+            if round(time_passed, 10) >= round(total_seconds, 10):
+                break
             # Determine the wait time until the next sampling point
             if round(time_passed + interval, 10) <= round(total_seconds, 10): 
             # Normal interval wait       
@@ -100,16 +110,14 @@ class EventManager:
                 time_passed += interval
 
                 
-            elif time_passed < total_seconds:
+            else: 
                 # Final wait: handle the remaining seconds to reach the exact total_seconds
                 remainder = total_seconds - time_passed
-                print(f"Waiting for the remainder of {remainder:.2f} seconds...")
-                time.sleep(remainder)
-                time_passed += remainder
+                if remainder > 0.001:
+                    print(f"Waiting for the remainder of {remainder:.2f} seconds...")
+                    time.sleep(remainder)
+                    time_passed += remainder
                
-            else:
-                # Stop if we have reached the exact total time
-                break
                               
            
         print(f"\nSimulation complete. Total time: {time_passed:.2f} seconds. Processed {len(all_captured_events)} events.")
@@ -118,25 +126,23 @@ class EventManager:
 
     
 
-    def export_each_sensor_to_json(self, events:list):
-        # Group data by sensor ID and save each to a separate JSON file
+    def export_each_sensor_to_json(self):
         
-        # If there is no data, dont do anything  
-        if not events:
+        # Ensure that simulation data exists before attempting to export
+        if not hasattr(self, 'grouped_data') or not self.grouped_data:
             return
-        grouped_events = {}
-        for e in events:
-            s_id = e['sensor_id']
-            if s_id not in grouped_events:
-                grouped_events[s_id] = []
-            grouped_events[s_id].append(e)
         
-        for s_id, sensor_events in grouped_events.items():
-            filename = f"sensor_{s_id:02d}.json"
+        try:
+        # Iterate through the dictionary and write each sensor's list to its own file
+            for s_id, sensor_events in self.grouped_data.items():
+                filename = f"sensor_{s_id:02d}.json"
 
-            with open(filename, 'w') as f:
-                json.dump(sensor_events, f, indent=4)
-        print(f"Successfully saved {len(grouped_events)} files.")    
+                with open(filename, 'w') as f:
+                    json.dump(sensor_events, f, indent=4)
+            print(f"Successfully saved {len(self.grouped_data)} files.")   
+        except IOError as e:
+            print(f"Error saving JSON files: {e}")
+       
 
 
 
