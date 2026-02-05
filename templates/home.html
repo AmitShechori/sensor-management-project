@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="content-section shadow-sm border-0">
+                <h3 class="text-primary"><i class="fas fa-list-ul mr-2"></i>Display</h3>
+                <hr>
+                <div class="list-group list-group-flush">
+                    <a href="/" class="list-group-item list-group-item-action active rounded mb-2">
+                        <i class="fas fa-th-large mr-2"></i> Grid Dashboard
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action rounded mb-2" onclick="alert('Table view coming in Stage 3')">
+                        <i class="fas fa-table mr-2"></i> Full Table
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action rounded mb-2" onclick="alert('Analysis feature locked')">
+                        <i class="fas fa-chart-line mr-2"></i> Statistics
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="font-weight-bold">Active Sensors</h2>
+                <span class="text-muted small">Auto-refresh ready</span>
+            </div>
+
+            <div class="row">
+                {% for sensor_id, data in grouped_data.items() %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white pt-3 border-bottom-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h4 class="text-primary font-weight-bold mb-0">{{ data.location }}</h4>
+                                    <small class="text-muted">Sensor ID: {{ sensor_id }}</small>
+                                </div>
+                                <div class="text-right">
+                                    <span class="badge badge-pill badge-dark px-3 py-2">
+                                        {{ data.events|length }} Events
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="bg-light rounded p-3 mb-3 d-flex align-items-center justify-content-between">
+                                <span><i class="fas fa-thermometer-half text-danger mr-2"></i>Normal Avg:</span>
+                                <h4 class="mb-0 font-weight-bold">{{ data.avg_temp }}°C</h4>
+                            </div>
+
+                            <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                <table class="table table-sm table-hover border-top">
+                                    <tbody>
+                                        {% for event in data.events %}
+                                        <tr>
+                                            <td class="small text-muted align-middle">{{ event.timestamp }}</td>
+                                            <td class="text-right">
+                                                <span class="badge {% if event.value > 25 or event.value < 18 %}badge-warning{% else %}badge-success{% endif %} p-2">
+                                                    {{ event.value }}°
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12 text-center py-5">
+                    <div class="alert alert-secondary shadow-sm">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <p>No sensor data received yet. Run the simulator to populate this dashboard.</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

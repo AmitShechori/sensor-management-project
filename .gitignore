@@ -1,5 +1,16 @@
-sensor_*.json
-errors.log
-sensor_data.csv
-sensor_data.json
+# Python environment
+.venv/
+venv/
+ENV/
+
+# Python cache
 __pycache__/
+*.pyc
+
+# Simulation data & Logs
+sensor_*.json
+sensor_data.csv
+errors.log
+
+# IDE settings
+.vscode/

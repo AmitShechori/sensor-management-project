@@ -1,9 +1,35 @@
 import sys
 import glob
 import os
+import requests
 from sensors import Sensor
 from event_manager import EventManager
 
+def send_event_to_server(event):
+    """שולח אירוע לשרת ללא הדפסה של הצלחה (כדי למנוע עומס)"""
+    url = "http://127.0.0.1:8000/ingest"
+    try:
+        payload = {
+            "event_id": str(event.get('id') or event.get('event_id')), 
+            "sensor_id": str(event.get('sensor_id')),
+            "location": str(event.get('location')),
+            "value": float(event.get('value'))
+        }
+        response = requests.post(url, json=payload, timeout=2)
+        return response.status_code == 200
+    except Exception:
+        return False
+
+# בתוך פונקציית main(), החלף את הלולאה הקודמת בזה:
+        if all_captured_events:
+            print(f"\n[API] Ingesting {len(all_captured_events)} events to dashboard...")
+            success_count = 0
+            
+            for event in all_captured_events:
+                if send_event_to_server(event):
+                    success_count += 1
+            
+            print(f"[API] Done! {success_count}/{len(all_captured_events)} events uploaded successfully.")
 def main():
     # Define the files we want to clear before starting a new run
     # This includes individual sensor JSONs and the aggregate CSV file
@@ -55,7 +81,10 @@ def main():
         # Start the sampling process and capture events from all sensors
         all_captured_events = manager.run_simulation(sensors, total_seconds, interval)
 
-                                             
+        if all_captured_events:
+            print(f"\n[API] Found {len(all_captured_events)} events. Sending to server...")
+            for event in all_captured_events:
+                send_event_to_server(event)                                    
         # Only proceed to export if data was actually collected
         if all_captured_events:
             manager.export_each_sensor_to_json()
